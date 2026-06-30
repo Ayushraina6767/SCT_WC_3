@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Tic Tac Toe</title>
+
+<style>
+  body{
+    margin:0;
+    font-family: Arial, sans-serif;
+    background:#0f172a;
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+  }
+
+  .container{
+    text-align:center;
+    width:320px;
+  }
+
+  h1{
+    margin-bottom:10px;
+    font-size:28px;
+  }
+
+  .mode button{
+    padding:8px 10px;
+    margin:5px;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    background:#334155;
+    color:white;
+  }
+
+  .mode .active{
+    background:#22c55e;
+    color:black;
+    font-weight:bold;
+  }
+
+  .scoreboard{
+    display:flex;
+    justify-content:space-between;
+    font-size:14px;
+    margin:10px 0;
+  }
+
+  #status{
+    margin:10px 0;
+    font-size:16px;
+    color:#e2e8f0;
+  }
+
+  .board{
+    display:grid;
+    grid-template-columns:repeat(3, 90px);
+    gap:8px;
+    justify-content:center;
+    margin:15px 0;
+  }
+
+  .cell{
+    width:90px;
+    height:90px;
+    background:#1e293b;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:2rem;
+    border-radius:10px;
+    cursor:pointer;
+    transition:0.2s;
+    user-select:none;
+  }
+
+  .cell:hover{
+    background:#334155;
+  }
+
+  .winner{
+    background:#22c55e !important;
+    color:black;
+  }
+
+  button#reset{
+    padding:10px 14px;
+    border:none;
+    border-radius:6px;
+    background:#ef4444;
+    color:white;
+    cursor:pointer;
+    margin-top:5px;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h1>Tic Tac Toe</h1>
+
+  <div class="mode">
+    <button id="pvp" class="active">PvP</button>
+    <button id="pvc">PvC</button>
+  </div>
+
+  <div class="scoreboard">
+    <div>X: <span id="sx">0</span></div>
+    <div>O: <span id="so">0</span></div>
+    <div>D: <span id="sd">0</span></div>
+  </div>
+
+  <div id="status">Player X's turn</div>
+
+  <div class="board" id="board"></div>
+
+  <button id="reset">Restart</button>
+</div>
+
+<script>
+let boardEl = document.getElementById("board");
+let statusEl = document.getElementById("status");
+
+let sx = document.getElementById("sx");
+let so = document.getElementById("so");
+let sd = document.getElementById("sd");
+
+let pvpBtn = document.getElementById("pvp");
+let pvcBtn = document.getElementById("pvc");
+
+let resetBtn = document.getElementById("reset");
+
+let board = Array(9).fill("");
+let current = "X";
+let active = true;
+let vsAI = false;
+
+let scoreX = 0, scoreO = 0, scoreD = 0;
+
+const wins = [
+  [0,1,2],[3,4,5],[6,7,8],
+  [0,3,6],[1,4,7],[2,5,8],
+  [0,4,8],[2,4,6]
+];
+
+function drawBoard(){
+  boardEl.innerHTML = "";
+  board.forEach((v,i)=>{
+    let div = document.createElement("div");
+    div.className = "cell";
+    div.dataset.i = i;
+    div.innerText = v;
+    div.onclick = clickCell;
+    boardEl.appendChild(div);
+  });
+}
+
+function clickCell(e){
+  let i = e.target.dataset.i;
+  if(!active || board[i] !== "") return;
+
+  move(i, current);
+
+  if(vsAI && current === "O"){
+    setTimeout(aiMove, 250);
+  }
+}
+
+function move(i, player){
+  board[i] = player;
+  drawBoard();
+
+  if(checkWin(player)){
+    statusEl.innerText = player + " wins!";
+    active = false;
+    updateScore(player);
+    return;
+  }
+
+  if(!board.includes("")){
+    statusEl.innerText = "Draw!";
+    scoreD++;
+    sd.innerText = scoreD;
+    active = false;
+    return;
+  }
+
+  current = current === "X" ? "O" : "X";
+  statusEl.innerText = "Player " + current + "'s turn";
+}
+
+function checkWin(p){
+  for(let w of wins){
+    let [a,b,c] = w;
+    if(board[a]===p && board[b]===p && board[c]===p){
+      highlight(w);
+      return true;
+    }
+  }
+  return false;
+}
+
+function highlight(w){
+  w.forEach(i=>{
+    document.querySelector(`[data-i="${i}"]`).classList.add("winner");
+  });
+}
+
+function aiMove(){
+  let empty = board.map((v,i)=>v===""?i:null).filter(v=>v!==null);
+  let pick = empty[Math.floor(Math.random()*empty.length)];
+  move(pick, "O");
+}
+
+function updateScore(p){
+  if(p==="X"){scoreX++;sx.innerText=scoreX;}
+  else{scoreO++;so.innerText=scoreO;}
+}
+
+function reset(){
+  board = Array(9).fill("");
+  current = "X";
+  active = true;
+  statusEl.innerText = "Player X's turn";
+  drawBoard();
+}
+
+pvpBtn.onclick = ()=>{
+  vsAI = false;
+  pvpBtn.classList.add("active");
+  pvcBtn.classList.remove("active");
+  reset();
+};
+
+pvcBtn.onclick = ()=>{
+  vsAI = true;
+  pvcBtn.classList.add("active");
+  pvpBtn.classList.remove("active");
+  reset();
+};
+
+resetBtn.onclick = reset;
+
+drawBoard();
+</script>
+
+</body>
+</html>
